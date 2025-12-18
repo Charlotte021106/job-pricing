@@ -155,11 +155,14 @@ attract_score = (w_brand * job_merged["brand_level"]
                  + w_hot * job_merged["hot_function"]
                  + eps)
 
+avg_salary_k = (job_merged["salary_min_k"] + job_merged["salary_max_k"]) / 2
 p_view = 1 / (1 + np.exp(-attract_score)) # sigmoid：让分数转换为0-1的概率
+salary_norm = (avg_salary_k - avg_salary_k.min()) / (avg_salary_k.max() - avg_salary_k.min() + 1e-6)
 
 # 曝光数：用Poisson模拟
-lam = base_lambda_exposure * p_view
-lam = lam.clip(20, None) #避免全是0，设定最小值20
+lam = base_lambda_exposure * (0.9 * p_view + 0.1 * salary_norm)
+lam = lam.clip(20, None) #避免全是0，设定最小值
+lam = lam + 50 * job_merged["intl_flag"]
 
 impressions = np.random.poisson(lam=lam)
 
