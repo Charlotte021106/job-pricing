@@ -1,0 +1,37 @@
+#pip install pandas pyarrow
+
+#目前考虑两种方法，主要基于train_samples进行压缩
+from pathlib import Path
+import os
+import pandas as pd
+
+csv_path = Path("train_samples_utf8.csv") 
+df = pd.read_csv(csv_path, encoding="utf-8")
+
+#方法1：直接将train_samples保存成为parquet文件
+if not os.path.exists("data/processed"):
+    os.makedirs("data/processed")
+out_path1 = Path("data/processed/train_samples.parquet") 
+
+# 保存为 Parquet + snappy 压缩
+df.to_parquet(out_path1, engine="pyarrow", compression="snappy")
+
+# 获取csv文件大小，把字节转换成KB（1KB=1024字节）
+csv_size = csv_path.stat().st_size / 1024
+parquet_size = out_path1.stat().st_size / 1024
+print(f"CSV size: {csv_size:.1f} KB, Parquet size: {parquet_size:.1f} KB")  #跑出来原本csv是243.2KB，parquet size是90.0KB
+print("rows:", len(df), "cols:", df.shape[1]) #打印一下可以检查有没有缺失项
+
+#方法2：按 industry/job_level 分区导出，也是report最初的想法
+out_path2 = Path("data/processed/train_samples_partitioned")
+
+for (industry, job_level), group_df in df.groupby(["industry", "job_level"]):
+    sub_dir = os.path.join(out_path2, str(industry), str(job_level))
+    if not os.path.exists(sub_dir):
+        os.makedirs(sub_dir)
+
+    # 保存为 Parquet + snappy 压缩
+    out_file = os.path.join(sub_dir, "data.parquet")
+    group_df.to_parquet(out_file, engine="pyarrow", compression="snappy")
+
+print("分区数量：", df.groupby(["industry", "job_level"]).ngroups) #打印一下区块数检查有没有缺失项
