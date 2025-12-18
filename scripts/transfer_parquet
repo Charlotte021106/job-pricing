@@ -7,10 +7,10 @@ import pandas as pd
 
 csv_path = Path("train_samples_utf8.csv") 
 df = pd.read_csv(csv_path, encoding="utf-8")
-
-#方法1：直接将train_samples保存成为parquet文件
 if not os.path.exists("data/processed"):
     os.makedirs("data/processed")
+
+#方法1：直接将train_samples保存成为parquet文件
 out_path1 = Path("data/processed/train_samples.parquet") 
 
 # 保存为 Parquet + snappy 压缩
