@@ -1,0 +1,18 @@
+from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
+
+class PricingQuoteRequest(BaseModel):
+    job_id: Optional[int] = Field(default=None)
+    company_id: Optional[int] = Field(default=None)
+    expected_value: Optional[float] = None
+    expected_high_quality_applies: Optional[float] = None
+    brand_factor: Optional[float] = 1.0
+
+class PricingQuoteResponse(BaseModel):
+    model_version: str
+    bucket: str
+    job_id: Optional[int]
+    company_id: Optional[int]
+    price: float
+    source: str
+    debug: Dict[str, Any] = {}
