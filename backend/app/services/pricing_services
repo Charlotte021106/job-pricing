@@ -1,0 +1,45 @@
+from typing import Optional, Dict, Any
+from app.db.session import get_conn
+from app.core.config import settings
+
+def _clip(x: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, x))
+
+def fetch_pricing_row(job_id: Optional[int], company_id: Optional[int]) -> Optional[Dict[str, Any]]:
+    if job_id is None and company_id is None:
+        return None
+
+    where = []
+    params = []
+
+    if job_id is not None:
+        where.append("job_id=%s")
+        params.append(job_id)
+    if company_id is not None:
+        where.append("company_id=%s")
+        params.append(company_id)
+
+    sql = f"""
+    SELECT *
+    FROM {settings.PRICING_TABLE}
+    WHERE {" OR ".join(where)}
+    LIMIT 1
+    """
+
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(sql, params)
+            return cur.fetchone()
+    finally:
+        conn.close()
+
+def fallback_price(expected_value: Optional[float],
+                   expected_high_quality_applies: Optional[float],
+                   brand_factor: float = 1.0) -> Dict[str, Any]:
+    ev = expected_value if expected_value is not None else 100.0
+    ehq = expected_high_quality_applies if expected_high_quality_applies is not None else 1.0
+    base = 0.6 * ev + 50.0 * ehq
+    price = base * (brand_factor if brand_factor is not None else 1.0)
+    price = _clip(price, 120.0, 650.0)
+    return {"price": float(price), "debug": {"base": base, "ev": ev, "ehq": ehq, "brand_factor": brand_factor}}
