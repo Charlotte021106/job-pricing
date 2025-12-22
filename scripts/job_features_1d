@@ -1,0 +1,20 @@
+CREATE TABLE job_features_1d (
+    job_id String,
+    company_id String,
+
+    -- Raw behavior counts
+    impression_cnt UInt32,
+    view_cnt UInt32,
+    apply_cnt UInt32,
+    hire_cnt UInt32,
+
+    -- Derived conversion features
+    ctr_view Float32,   -- view / impression
+    ctr_apply Float32,  -- apply / view
+    ctr_hire Float32,   -- hire / apply
+
+    -- Pricing label
+    price_label Float32
+)
+ENGINE = MergeTree
+ORDER BY (job_id);
