@@ -1,20 +1,17 @@
-CREATE TABLE job_features_1d (
-    job_id String,
-    company_id String,
+SELECT
+    toDate(event_time)               AS dt,
+    job_id,
+    company_id,
 
-    -- Raw behavior counts
-    impression_cnt UInt32,
-    view_cnt UInt32,
-    apply_cnt UInt32,
-    hire_cnt UInt32,
+    countIf(event_type = 'impression') AS impression_1d,
+    countIf(event_type = 'view')       AS view_1d,
+    countIf(event_type = 'apply')      AS apply_1d,
+    countIf(event_type = 'hire')       AS hire_1d,
 
-    -- Derived conversion features
-    ctr_view Float32,   -- view / impression
-    ctr_apply Float32,  -- apply / view
-    ctr_hire Float32,   -- hire / apply
+    uniqExact(user_id)                 AS uniq_user_1d
 
-    -- Pricing label
-    price_label Float32
-)
-ENGINE = MergeTree
-ORDER BY (job_id);
+FROM pricing.job_events
+GROUP BY
+    dt,
+    job_id,
+    company_id;
