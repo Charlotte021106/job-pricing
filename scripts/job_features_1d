@@ -1,17 +1,14 @@
 SELECT
-    toDate(event_time)               AS dt,
+    toDate(event_time) AS dt,
     job_id,
     company_id,
 
     countIf(event_type = 'impression') AS impression_1d,
-    countIf(event_type = 'view')       AS view_1d,
-    countIf(event_type = 'apply')      AS apply_1d,
-    countIf(event_type = 'hire')       AS hire_1d,
+    countIf(event_type = 'view') AS view_1d,
+    countIf(event_type = 'apply') AS apply_1d,
+    countIf(event_type = 'hire') AS hire_1d,
 
-    uniqExact(user_id)                 AS uniq_user_1d
+    uniqExact(user_id) AS uniq_user_1d
 
 FROM pricing.job_events
-GROUP BY
-    dt,
-    job_id,
-    company_id;
+GROUP BY dt, job_id, company_id;
